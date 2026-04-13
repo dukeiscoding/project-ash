@@ -15,6 +15,10 @@ sky = SubResource("Sky_yv0av")
 
 [sub_resource type="BoxMesh" id="BoxMesh_anjkr"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yv0av"]
+albedo_color = Color(1, 0.39999998, 0.39999998, 1)
+grow_amount = -1.805
+
 [node name="TestRoom" type="Node3D" unique_id=1070832589]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1621377722]
@@ -24,13 +28,15 @@ transform = Transform3D(1, 0, 0, 0, -0.009756216, 0.99995244, 0, -0.99995244, -0
 environment = SubResource("Environment_x68ck")
 
 [node name="Floor" type="StaticBody3D" parent="." unique_id=1514799489]
-transform = Transform3D(20, 0, 0, 0, 1, 0, 0, 0, 20, 0, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=509983903]
+transform = Transform3D(20, 0, 0, 0, 1, 0, 0, 0, 20, 0, 0, 0)
 shape = SubResource("BoxShape3D_gyqsl")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=955342666]
+transform = Transform3D(20, 0, 0, 0, 1, 0, 0, 0, 20, 0, 0, 0)
 mesh = SubResource("BoxMesh_anjkr")
+surface_material_override/0 = SubResource("StandardMaterial3D_yv0av")
 
 [node name="Ash" parent="." unique_id=2140954512 instance=ExtResource("1_yv0av")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
