@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://e0d8b6smprx5"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_tgwed"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_dbnym"]
+
+[node name="Ash" type="CharacterBody3D" unique_id=2140954512]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1307956646]
+mesh = SubResource("BoxMesh_tgwed")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1100450711]
+shape = SubResource("CapsuleShape3D_dbnym")
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=1639969481]
+transform = Transform3D(1, 0, 0, 0, 0.8742217, 0.48552695, 0, -0.48552695, 0.8742217, 0, 1.5, 1.0793108)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot" unique_id=1767871894]
+spring_length = 5.0
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D" unique_id=1039838326]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3220644, 0.5798969)
+current = true
+
+[node name="GroundRayCast" type="RayCast3D" parent="." unique_id=1694814080]
+target_position = Vector3(0, -1.5, 0)

@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://b20ub7xmalxlk"]
+
+[ext_resource type="PackedScene" uid="uid://e0d8b6smprx5" path="res://scenes/player/ash.tscn" id="1_yv0av"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tn84w"]
+
+[sub_resource type="Sky" id="Sky_yv0av"]
+sky_material = SubResource("ProceduralSkyMaterial_tn84w")
+
+[sub_resource type="Environment" id="Environment_x68ck"]
+background_mode = 2
+sky = SubResource("Sky_yv0av")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gyqsl"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_anjkr"]
+
+[node name="TestRoom" type="Node3D" unique_id=1070832589]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1621377722]
+transform = Transform3D(1, 0, 0, 0, -0.009756216, 0.99995244, 0, -0.99995244, -0.009756216, 0, 9.332954, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=814587325]
+environment = SubResource("Environment_x68ck")
+
+[node name="Floor" type="StaticBody3D" parent="." unique_id=1514799489]
+transform = Transform3D(20, 0, 0, 0, 1, 0, 0, 0, 20, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=509983903]
+shape = SubResource("BoxShape3D_gyqsl")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=955342666]
+mesh = SubResource("BoxMesh_anjkr")
+
+[node name="Ash" parent="." unique_id=2140954512 instance=ExtResource("1_yv0av")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
