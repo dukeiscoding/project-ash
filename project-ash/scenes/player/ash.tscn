@@ -8,6 +8,7 @@
 
 [node name="Ash" type="CharacterBody3D" unique_id=2140954512]
 script = ExtResource("1_dbnym")
+fall_gravity_multiplier = 1.6
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1100450711]
 shape = SubResource("CapsuleShape3D_dbnym")
