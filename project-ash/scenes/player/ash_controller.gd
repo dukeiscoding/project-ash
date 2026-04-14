@@ -13,6 +13,10 @@ extends CharacterBody3D
 @export var min_pitch: float = deg_to_rad(-60.0)
 @export var max_pitch: float = deg_to_rad(35.0)
 
+@export var normal_fov: float = 75.0
+@export var dash_fov: float = 84.0
+@export var fov_lerp_speed: float = 14.0
+
 @export var coyote_time: float = 0.12
 @export var jump_buffer_time: float = 0.12
 
@@ -20,9 +24,14 @@ extends CharacterBody3D
 @export var dash_duration: float = 0.15
 @export var dash_cooldown: float = 0.35
 
+@export var fall_respawn_y: float = -10.0
+@export var respawn_marker_path: NodePath
+
 @onready var visual_root: Node3D = $VisualRoot
 @onready var camera_yaw: Node3D = $CameraYaw
 @onready var camera_pitch: Node3D = $CameraYaw/CameraPitch
+@onready var camera: Camera3D = $CameraYaw/CameraPitch/SpringArm3D/Camera3D
+@onready var respawn_marker: Marker3D = get_node_or_null(respawn_marker_path)
 
 var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
@@ -34,6 +43,7 @@ var dash_direction := Vector3.ZERO
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	camera.fov = normal_fov
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -57,6 +67,8 @@ func _physics_process(delta: float) -> void:
 
 	_handle_visual_rotation(delta)
 	move_and_slide()
+	_update_camera_fov(delta)
+	_check_fall_respawn()
 
 func _update_timers(delta: float) -> void:
 	if is_on_floor():
@@ -161,3 +173,22 @@ func _handle_visual_rotation(delta: float) -> void:
 			target_rotation,
 			rotation_speed * delta
 		)
+
+func _update_camera_fov(delta: float) -> void:
+	var target_fov := dash_fov if is_dashing else normal_fov
+	camera.fov = lerp(camera.fov, target_fov, fov_lerp_speed * delta)
+
+func _check_fall_respawn() -> void:
+	if global_position.y < fall_respawn_y:
+		_respawn_player()
+
+func _respawn_player() -> void:
+	if respawn_marker == null:
+		return
+
+	global_position = respawn_marker.global_position
+	velocity = Vector3.ZERO
+	is_dashing = false
+	dash_timer = 0.0
+	dash_cooldown_timer = 0.0
+	camera.fov = normal_fov

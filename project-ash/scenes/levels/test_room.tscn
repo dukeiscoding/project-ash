@@ -176,3 +176,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_asmw1")
 
 [node name="Ash" parent="." unique_id=2140954512 instance=ExtResource("1_yv0av")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+respawn_marker_path = NodePath("../PlayerSpawn")
+
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1431862940]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 6)

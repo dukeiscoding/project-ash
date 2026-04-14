@@ -6,6 +6,9 @@
 
 [sub_resource type="BoxMesh" id="BoxMesh_tgwed"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dbnym"]
+albedo_color = Color(1, 0.94916666, 0.39, 1)
+
 [node name="Ash" type="CharacterBody3D" unique_id=2140954512]
 script = ExtResource("1_dbnym")
 fall_gravity_multiplier = 1.6
@@ -18,6 +21,7 @@ shape = SubResource("CapsuleShape3D_dbnym")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="VisualRoot" unique_id=1307956646]
 transform = Transform3D(1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("BoxMesh_tgwed")
+surface_material_override/0 = SubResource("StandardMaterial3D_dbnym")
 
 [node name="CameraYaw" type="Node3D" parent="." unique_id=1135958506]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
