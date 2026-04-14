@@ -9,6 +9,16 @@
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dbnym"]
 albedo_color = Color(1, 0.94916666, 0.39, 1)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_dbnym"]
+size = Vector3(1.5, 1.5, 1.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xdlwq"]
+albedo_color = Color(2.560556e-05, 0.9890235, 0.891037, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_v0p8n"]
+material = SubResource("StandardMaterial3D_xdlwq")
+size = Vector3(1.5, 1.5, 1.5)
+
 [node name="Ash" type="CharacterBody3D" unique_id=2140954512]
 script = ExtResource("1_dbnym")
 fall_gravity_multiplier = 1.6
@@ -37,3 +47,17 @@ current = true
 
 [node name="GroundRayCast" type="RayCast3D" parent="." unique_id=1694814080]
 target_position = Vector3(0, -1.5, 0)
+
+[node name="AttackPivot" type="Node3D" parent="." unique_id=189224549]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="AttackHitbox" type="Area3D" parent="AttackPivot" unique_id=901313209]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.2)
+monitoring = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AttackPivot/AttackHitbox" unique_id=818730194]
+shape = SubResource("BoxShape3D_dbnym")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AttackPivot/AttackHitbox" unique_id=779029342]
+visible = false
+mesh = SubResource("BoxMesh_v0p8n")

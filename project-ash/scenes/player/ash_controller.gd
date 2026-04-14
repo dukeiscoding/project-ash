@@ -27,11 +27,17 @@ extends CharacterBody3D
 @export var fall_respawn_y: float = -10.0
 @export var respawn_marker_path: NodePath
 
+@export var attack_duration: float = 0.12
+@export var attack_cooldown: float = 0.25
+
 @onready var visual_root: Node3D = $VisualRoot
 @onready var camera_yaw: Node3D = $CameraYaw
 @onready var camera_pitch: Node3D = $CameraYaw/CameraPitch
 @onready var camera: Camera3D = $CameraYaw/CameraPitch/SpringArm3D/Camera3D
 @onready var respawn_marker: Marker3D = get_node_or_null(respawn_marker_path)
+@onready var attack_pivot: Node3D = $AttackPivot
+@onready var attack_hitbox: Area3D = $AttackPivot/AttackHitbox
+@onready var attack_debug_mesh: MeshInstance3D = $AttackPivot/AttackHitbox/MeshInstance3D
 
 var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
@@ -41,9 +47,18 @@ var dash_timer := 0.0
 var dash_cooldown_timer := 0.0
 var dash_direction := Vector3.ZERO
 
+var is_attacking := false
+var attack_timer := 0.0
+var attack_cooldown_timer := 0.0
+var hit_targets_this_swing: Array[Node] = []
+
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	camera.fov = normal_fov
+	attack_hitbox.monitoring = false
+	attack_debug_mesh.visible = false
+	attack_hitbox.body_entered.connect(_on_attack_hitbox_body_entered)
+	attack_hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -56,6 +71,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	_update_timers(delta)
+	_try_start_attack()
 
 	if is_dashing:
 		_handle_dash(delta)
@@ -65,6 +81,8 @@ func _physics_process(delta: float) -> void:
 		_handle_horizontal_movement(delta)
 		_try_start_dash()
 
+	_update_attack_state(delta)
+	_update_attack_pivot()
 	_handle_visual_rotation(delta)
 	move_and_slide()
 	_update_camera_fov(delta)
@@ -78,6 +96,7 @@ func _update_timers(delta: float) -> void:
 
 	jump_buffer_timer = max(jump_buffer_timer - delta, 0.0)
 	dash_cooldown_timer = max(dash_cooldown_timer - delta, 0.0)
+	attack_cooldown_timer = max(attack_cooldown_timer - delta, 0.0)
 
 func _handle_jump_input() -> void:
 	if Input.is_action_just_pressed("jump"):
@@ -162,12 +181,63 @@ func _handle_dash(delta: float) -> void:
 	if dash_timer <= 0.0:
 		is_dashing = false
 
-func _handle_visual_rotation(delta: float) -> void:
+func _try_start_attack() -> void:
+	if not Input.is_action_just_pressed("attack"):
+		return
+
+	if is_attacking:
+		return
+
+	if attack_cooldown_timer > 0.0:
+		return
+
+	is_attacking = true
+	attack_timer = attack_duration
+	attack_cooldown_timer = attack_cooldown
+	hit_targets_this_swing.clear()
+	attack_hitbox.monitoring = true
+	attack_debug_mesh.visible = true
+
+	print("Attack started")
+
+func _update_attack_state(delta: float) -> void:
+	if not is_attacking:
+		return
+
+	attack_timer -= delta
+
+	if attack_timer <= 0.0:
+		is_attacking = false
+		attack_hitbox.monitoring = false
+		attack_debug_mesh.visible = false
+		hit_targets_this_swing.clear()
+
+func _update_attack_pivot() -> void:
 	var horizontal_velocity := Vector3(velocity.x, 0.0, velocity.z)
 
 	if horizontal_velocity.length() > 0.05:
 		var facing_dir := horizontal_velocity.normalized()
-		var target_rotation := atan2(facing_dir.x, facing_dir.z)
+		attack_pivot.rotation.y = atan2(facing_dir.x, facing_dir.z)
+	else:
+		attack_pivot.rotation.y = visual_root.rotation.y
+
+func _handle_visual_rotation(delta: float) -> void:
+	var input_dir: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+
+	if input_dir != Vector2.ZERO:
+		var basis := camera_yaw.global_transform.basis
+		var forward := -basis.z
+		var right := basis.x
+
+		forward.y = 0.0
+		right.y = 0.0
+
+		forward = forward.normalized()
+		right = right.normalized()
+
+		var move_dir := (right * input_dir.x - forward * input_dir.y).normalized()
+		var target_rotation := atan2(move_dir.x, move_dir.z)
+
 		visual_root.rotation.y = lerp_angle(
 			visual_root.rotation.y,
 			target_rotation,
@@ -191,4 +261,37 @@ func _respawn_player() -> void:
 	is_dashing = false
 	dash_timer = 0.0
 	dash_cooldown_timer = 0.0
+	is_attacking = false
+	attack_timer = 0.0
+	attack_cooldown_timer = 0.0
+	attack_hitbox.monitoring = false
+	attack_debug_mesh.visible = false
 	camera.fov = normal_fov
+
+func _on_attack_hitbox_body_entered(body: Node) -> void:
+	if body == self:
+		return
+
+	if hit_targets_this_swing.has(body):
+		return
+
+	hit_targets_this_swing.append(body)
+
+	if body.has_method("take_damage"):
+		body.take_damage(1)
+
+	print("Hit body:", body.name)
+
+func _on_attack_hitbox_area_entered(area: Area3D) -> void:
+	if area == attack_hitbox:
+		return
+
+	if hit_targets_this_swing.has(area):
+		return
+
+	hit_targets_this_swing.append(area)
+
+	if area.has_method("take_damage"):
+		area.take_damage(1)
+
+	print("Hit area:", area.name)

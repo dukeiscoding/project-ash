@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b20ub7xmalxlk"]
 
 [ext_resource type="PackedScene" uid="uid://e0d8b6smprx5" path="res://scenes/player/ash.tscn" id="1_yv0av"]
+[ext_resource type="PackedScene" uid="uid://smimgte4vlkg" path="res://scenes/enemies/dummy_target.tscn" id="2_x68ck"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tn84w"]
 
@@ -180,3 +181,6 @@ respawn_marker_path = NodePath("../PlayerSpawn")
 
 [node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1431862940]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 6)
+
+[node name="DummyTarget" parent="." unique_id=811456662 instance=ExtResource("2_x68ck")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -4)

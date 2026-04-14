@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://smimgte4vlkg"]
+
+[ext_resource type="Script" uid="uid://n6ltsco7udmt" path="res://scripts/enemies/dummy_target.gd" id="1_nene0"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ej8qc"]
+size = Vector3(1.5, 2, 1.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nene0"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bd148"]
+material = SubResource("StandardMaterial3D_nene0")
+size = Vector3(1.5, 2, 1.5)
+
+[node name="DummyTarget" type="StaticBody3D" unique_id=811456662]
+script = ExtResource("1_nene0")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=881874494]
+shape = SubResource("BoxShape3D_ej8qc")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1159930612]
+mesh = SubResource("BoxMesh_bd148")
+
+[node name="HitFlashTimer" type="Timer" parent="." unique_id=1485549474]
+wait_time = 0.1
+one_shot = true
