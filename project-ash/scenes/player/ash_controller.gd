@@ -10,6 +10,7 @@ extends CharacterBody3D
 @export var rotation_speed: float = 12.0
 
 @export var mouse_sensitivity: float = 0.003
+@export var controller_look_sensitivity: float = 3.2
 @export var min_pitch: float = deg_to_rad(-60.0)
 @export var max_pitch: float = deg_to_rad(35.0)
 
@@ -30,6 +31,16 @@ extends CharacterBody3D
 @export var attack_duration: float = 0.12
 @export var attack_cooldown: float = 0.25
 
+@export var max_air_jumps: int = 1
+
+@export var run_anim_speed_threshold: float = 0.15
+@export var land_anim_duration: float = 0.12
+@export var jump_start_min_duration: float = 1.0
+@export var jump_start_playback_speed: float = 1.0
+@export var double_jump_anim_duration: float = 0.35
+@export var double_jump_playback_speed: float = 1.0
+@export var double_jump_min_duration: float = 0.45
+
 @onready var visual_root: Node3D = $VisualRoot
 @onready var camera_yaw: Node3D = $CameraYaw
 @onready var camera_pitch: Node3D = $CameraYaw/CameraPitch
@@ -39,8 +50,13 @@ extends CharacterBody3D
 @onready var attack_hitbox: Area3D = $AttackPivot/AttackHitbox
 @onready var attack_debug_mesh: MeshInstance3D = $AttackPivot/AttackHitbox/MeshInstance3D
 
+@onready var jak_root: Node3D = $"VisualRoot/Jak(T-Pose)"
+@onready var animation_player: AnimationPlayer = $"VisualRoot/Jak(T-Pose)/AnimationPlayer2"
+@onready var animation_tree: AnimationTree = $"VisualRoot/Jak(T-Pose)/AnimationTree"
+
 var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
+var air_jumps_remaining: int = 0
 
 var is_dashing := false
 var dash_timer := 0.0
@@ -52,6 +68,14 @@ var attack_timer := 0.0
 var attack_cooldown_timer := 0.0
 var hit_targets_this_swing: Array[Node] = []
 
+var current_anim: String = ""
+var was_on_floor_last_frame: bool = false
+var land_timer: float = 0.0
+var jump_start_timer: float = 0.0
+var double_jump_timer: float = 0.0
+var double_jump_elapsed: float = 0.0
+var animation_playback: AnimationNodeStateMachinePlayback
+
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	camera.fov = normal_fov
@@ -59,17 +83,29 @@ func _ready() -> void:
 	attack_debug_mesh.visible = false
 	attack_hitbox.body_entered.connect(_on_attack_hitbox_body_entered)
 	attack_hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
+	air_jumps_remaining = max_air_jumps
+	was_on_floor_last_frame = is_on_floor()
+	_disable_unused_animation_players()
+	animation_tree.active = true
+	animation_playback = animation_tree.get("parameters/playback") as AnimationNodeStateMachinePlayback
+
+	if animation_playback != null:
+		animation_player.speed_scale = 1.0
+		animation_playback.start("Idle")
+		current_anim = "Idle"
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		camera_yaw.rotate_y(-event.relative.x * mouse_sensitivity)
-		camera_pitch.rotation.x -= event.relative.y * mouse_sensitivity
-		camera_pitch.rotation.x = clamp(camera_pitch.rotation.x, min_pitch, max_pitch)
+		_apply_camera_look(
+			-event.relative.x * mouse_sensitivity,
+			-event.relative.y * mouse_sensitivity
+		)
 
 	if event.is_action_pressed("ui_cancel"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 func _physics_process(delta: float) -> void:
+	_handle_controller_camera_input(delta)
 	_update_timers(delta)
 	_try_start_attack()
 
@@ -87,16 +123,22 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_camera_fov(delta)
 	_check_fall_respawn()
+	_update_character_animation(delta)
 
 func _update_timers(delta: float) -> void:
 	if is_on_floor():
 		coyote_timer = coyote_time
+		air_jumps_remaining = max_air_jumps
 	else:
 		coyote_timer = max(coyote_timer - delta, 0.0)
 
 	jump_buffer_timer = max(jump_buffer_timer - delta, 0.0)
 	dash_cooldown_timer = max(dash_cooldown_timer - delta, 0.0)
 	attack_cooldown_timer = max(attack_cooldown_timer - delta, 0.0)
+	jump_start_timer = max(jump_start_timer - delta, 0.0)
+	if double_jump_timer > 0.0:
+		double_jump_timer = max(double_jump_timer - delta, 0.0)
+		double_jump_elapsed += delta
 
 func _handle_jump_input() -> void:
 	if Input.is_action_just_pressed("jump"):
@@ -104,8 +146,18 @@ func _handle_jump_input() -> void:
 
 	if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
 		velocity.y = jump_velocity
+		jump_start_timer = jump_start_min_duration
 		jump_buffer_timer = 0.0
 		coyote_timer = 0.0
+		return
+
+	if Input.is_action_just_pressed("jump") and not is_on_floor() and air_jumps_remaining > 0:
+		velocity.y = jump_velocity
+		double_jump_timer = double_jump_anim_duration
+		double_jump_elapsed = 0.0
+		jump_start_timer = 0.0
+		air_jumps_remaining -= 1
+		jump_buffer_timer = 0.0
 
 func _apply_gravity(delta: float) -> void:
 	if is_on_floor():
@@ -121,24 +173,15 @@ func _apply_gravity(delta: float) -> void:
 	velocity.y -= gravity_to_apply * delta
 
 func _handle_horizontal_movement(delta: float) -> void:
-	var input_dir: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var input_dir := _get_move_input()
 	var move_dir := Vector3.ZERO
+	var input_strength := input_dir.length()
 
 	if input_dir != Vector2.ZERO:
-		var basis := camera_yaw.global_transform.basis
-		var forward := -basis.z
-		var right := basis.x
+		move_dir = _get_camera_relative_direction(input_dir)
 
-		forward.y = 0
-		right.y = 0
-
-		forward = forward.normalized()
-		right = right.normalized()
-
-		move_dir = (right * input_dir.x - forward * input_dir.y).normalized()
-
-	var target_velocity_x := move_dir.x * move_speed
-	var target_velocity_z := move_dir.z * move_speed
+	var target_velocity_x := move_dir.x * move_speed * input_strength
+	var target_velocity_z := move_dir.z * move_speed * input_strength
 	var current_accel := acceleration if is_on_floor() else air_acceleration
 
 	velocity.x = move_toward(velocity.x, target_velocity_x, current_accel * delta * move_speed)
@@ -151,21 +194,13 @@ func _try_start_dash() -> void:
 	if dash_cooldown_timer > 0.0:
 		return
 
-	var input_dir: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	var basis := camera_yaw.global_transform.basis
-	var forward := -basis.z
-	var right := basis.x
-
-	forward.y = 0
-	right.y = 0
-
-	forward = forward.normalized()
-	right = right.normalized()
+	var input_dir := _get_move_input()
+	var forward := _get_camera_forward()
 
 	if input_dir != Vector2.ZERO:
-		dash_direction = (right * input_dir.x - forward * input_dir.y).normalized()
+		dash_direction = _get_camera_relative_direction(input_dir)
 	else:
-		dash_direction = forward.normalized()
+		dash_direction = forward
 
 	is_dashing = true
 	dash_timer = dash_duration
@@ -222,20 +257,10 @@ func _update_attack_pivot() -> void:
 		attack_pivot.rotation.y = visual_root.rotation.y
 
 func _handle_visual_rotation(delta: float) -> void:
-	var input_dir: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var input_dir := _get_move_input()
 
 	if input_dir != Vector2.ZERO:
-		var basis := camera_yaw.global_transform.basis
-		var forward := -basis.z
-		var right := basis.x
-
-		forward.y = 0.0
-		right.y = 0.0
-
-		forward = forward.normalized()
-		right = right.normalized()
-
-		var move_dir := (right * input_dir.x - forward * input_dir.y).normalized()
+		var move_dir := _get_camera_relative_direction(input_dir)
 		var target_rotation := atan2(move_dir.x, move_dir.z)
 
 		visual_root.rotation.y = lerp_angle(
@@ -247,6 +272,43 @@ func _handle_visual_rotation(delta: float) -> void:
 func _update_camera_fov(delta: float) -> void:
 	var target_fov := dash_fov if is_dashing else normal_fov
 	camera.fov = lerp(camera.fov, target_fov, fov_lerp_speed * delta)
+
+func _handle_controller_camera_input(delta: float) -> void:
+	var look_input := Input.get_vector("look_left", "look_right", "look_up", "look_down")
+
+	if look_input == Vector2.ZERO:
+		return
+
+	_apply_camera_look(
+		-look_input.x * controller_look_sensitivity * delta,
+		-look_input.y * controller_look_sensitivity * delta
+	)
+
+func _apply_camera_look(yaw_delta: float, pitch_delta: float) -> void:
+	camera_yaw.rotate_y(yaw_delta)
+	camera_pitch.rotation.x = clamp(
+		camera_pitch.rotation.x + pitch_delta,
+		min_pitch,
+		max_pitch
+	)
+
+func _get_move_input() -> Vector2:
+	return Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+
+func _get_camera_forward() -> Vector3:
+	var forward := -camera_yaw.global_transform.basis.z
+	forward.y = 0.0
+	return forward.normalized()
+
+func _get_camera_right() -> Vector3:
+	var right := camera_yaw.global_transform.basis.x
+	right.y = 0.0
+	return right.normalized()
+
+func _get_camera_relative_direction(input_dir: Vector2) -> Vector3:
+	var forward := _get_camera_forward()
+	var right := _get_camera_right()
+	return (right * input_dir.x - forward * input_dir.y).normalized()
 
 func _check_fall_respawn() -> void:
 	if global_position.y < fall_respawn_y:
@@ -266,7 +328,85 @@ func _respawn_player() -> void:
 	attack_cooldown_timer = 0.0
 	attack_hitbox.monitoring = false
 	attack_debug_mesh.visible = false
+	air_jumps_remaining = max_air_jumps
 	camera.fov = normal_fov
+	land_timer = 0.0
+	jump_start_timer = 0.0
+	double_jump_timer = 0.0
+	double_jump_elapsed = 0.0
+	if animation_playback != null:
+		animation_player.speed_scale = 1.0
+		animation_playback.start("Idle")
+		current_anim = "Idle"
+
+func _update_character_animation(delta: float) -> void:
+	var on_floor_now := is_on_floor()
+	var just_landed := on_floor_now and not was_on_floor_last_frame
+	var horizontal_speed := Vector3(velocity.x, 0.0, velocity.z).length()
+
+	if just_landed:
+		land_timer = land_anim_duration
+
+	if land_timer > 0.0:
+		land_timer -= delta
+
+	# FUTURE ANIMATIONS: add new animation priority rules here.
+	# Higher in this list = higher priority.
+	# Example later:
+	# hurt > death > melee_combo > dash > double_jump > jump_start > fall > land > run > idle
+
+	if is_attacking:
+		_play_character_animation("Melee")
+	elif is_dashing:
+		_play_character_animation("Dash")
+	elif not on_floor_now and _should_play_double_jump():
+		_play_character_animation("DoubleJump")
+	elif not on_floor_now and jump_start_timer > 0.0:
+		_play_character_animation("JumpStart")
+	elif not on_floor_now and jump_start_timer <= 0.0:
+		_play_character_animation("FallLoop")
+	elif land_timer > 0.0:
+		_play_character_animation("Land")
+	elif horizontal_speed > run_anim_speed_threshold:
+		_play_character_animation("Run")
+	else:
+		_play_character_animation("Idle")
+
+	was_on_floor_last_frame = on_floor_now
+
+func _should_play_double_jump() -> bool:
+	if double_jump_timer <= 0.0:
+		return false
+
+	return double_jump_elapsed < double_jump_min_duration or velocity.y > 0.0
+
+func _play_character_animation(anim_name: String) -> void:
+	if current_anim == anim_name:
+		return
+
+	if animation_playback == null:
+		return
+
+	if anim_name == "JumpStart":
+		animation_player.speed_scale = jump_start_playback_speed
+	elif anim_name == "DoubleJump":
+		animation_player.speed_scale = double_jump_playback_speed
+	else:
+		animation_player.speed_scale = 1.0
+	animation_playback.travel(anim_name)
+
+	print("Playing animation:", anim_name)
+	current_anim = anim_name
+
+func _disable_unused_animation_players() -> void:
+	for child in jak_root.get_children():
+		if child is AnimationPlayer and child != animation_player:
+			child.stop()
+			child.active = false
+
+	animation_player.stop()
+	animation_player.active = true
+	animation_player.speed_scale = 1.0
 
 func _on_attack_hitbox_body_entered(body: Node) -> void:
 	if body == self:
@@ -277,8 +417,14 @@ func _on_attack_hitbox_body_entered(body: Node) -> void:
 
 	hit_targets_this_swing.append(body)
 
-	if body.has_method("take_damage"):
-		body.take_damage(1)
+	if body is Node3D:
+		var body_3d: Node3D = body
+		var hit_direction: Vector3 = body_3d.global_position - global_position
+		hit_direction.y = 0.0
+		hit_direction = hit_direction.normalized()
+
+		if body.has_method("take_damage"):
+			body.take_damage(1, hit_direction)
 
 	print("Hit body:", body.name)
 
@@ -291,7 +437,11 @@ func _on_attack_hitbox_area_entered(area: Area3D) -> void:
 
 	hit_targets_this_swing.append(area)
 
+	var hit_direction: Vector3 = area.global_position - global_position
+	hit_direction.y = 0.0
+	hit_direction = hit_direction.normalized()
+
 	if area.has_method("take_damage"):
-		area.take_damage(1)
+		area.take_damage(1, hit_direction)
 
 	print("Hit area:", area.name)
