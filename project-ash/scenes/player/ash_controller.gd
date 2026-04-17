@@ -231,7 +231,7 @@ func _try_start_attack() -> void:
 	attack_cooldown_timer = attack_cooldown
 	hit_targets_this_swing.clear()
 	attack_hitbox.monitoring = true
-	attack_debug_mesh.visible = true
+	attack_debug_mesh.visible = false
 
 	print("Attack started")
 
