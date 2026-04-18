@@ -30,6 +30,7 @@ extends CharacterBody3D
 
 @export var attack_duration: float = 0.12
 @export var attack_cooldown: float = 0.25
+@export var melee_weapon_path: NodePath = NodePath("VisualRoot/Jak(T-Pose)/Skeleton3D/weaponSocket_rightHand/PC _ Computer - Team Fortress 2 - Weapons_ Scout - Holy Mackerel")
 
 @export var max_air_jumps: int = 1
 
@@ -49,6 +50,7 @@ extends CharacterBody3D
 @onready var attack_pivot: Node3D = $AttackPivot
 @onready var attack_hitbox: Area3D = $AttackPivot/AttackHitbox
 @onready var attack_debug_mesh: MeshInstance3D = $AttackPivot/AttackHitbox/MeshInstance3D
+@onready var melee_weapon: Node3D = get_node_or_null(melee_weapon_path)
 
 @onready var jak_root: Node3D = $"VisualRoot/Jak(T-Pose)"
 @onready var animation_player: AnimationPlayer = $"VisualRoot/Jak(T-Pose)/AnimationPlayer2"
@@ -81,6 +83,7 @@ func _ready() -> void:
 	camera.fov = normal_fov
 	attack_hitbox.monitoring = false
 	attack_debug_mesh.visible = false
+	_set_melee_weapon_visible(false)
 	attack_hitbox.body_entered.connect(_on_attack_hitbox_body_entered)
 	attack_hitbox.area_entered.connect(_on_attack_hitbox_area_entered)
 	air_jumps_remaining = max_air_jumps
@@ -232,6 +235,7 @@ func _try_start_attack() -> void:
 	hit_targets_this_swing.clear()
 	attack_hitbox.monitoring = true
 	attack_debug_mesh.visible = false
+	_set_melee_weapon_visible(true)
 
 	print("Attack started")
 
@@ -245,6 +249,7 @@ func _update_attack_state(delta: float) -> void:
 		is_attacking = false
 		attack_hitbox.monitoring = false
 		attack_debug_mesh.visible = false
+		_set_melee_weapon_visible(false)
 		hit_targets_this_swing.clear()
 
 func _update_attack_pivot() -> void:
@@ -328,6 +333,7 @@ func _respawn_player() -> void:
 	attack_cooldown_timer = 0.0
 	attack_hitbox.monitoring = false
 	attack_debug_mesh.visible = false
+	_set_melee_weapon_visible(false)
 	air_jumps_remaining = max_air_jumps
 	camera.fov = normal_fov
 	land_timer = 0.0
@@ -397,6 +403,10 @@ func _play_character_animation(anim_name: String) -> void:
 
 	print("Playing animation:", anim_name)
 	current_anim = anim_name
+
+func _set_melee_weapon_visible(is_visible: bool) -> void:
+	if melee_weapon != null:
+		melee_weapon.visible = is_visible
 
 func _disable_unused_animation_players() -> void:
 	for child in jak_root.get_children():

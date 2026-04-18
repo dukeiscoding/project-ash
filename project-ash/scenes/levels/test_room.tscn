@@ -67,6 +67,81 @@ size = Vector3(5, 1, 5)
 [sub_resource type="BoxMesh" id="BoxMesh_fma50"]
 size = Vector3(5, 1, 5)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_asmw1"]
+size = Vector3(4, 1, 4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_anjkr"]
+albedo_color = Color(0.32941177, 1, 0.5647059, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sa601"]
+material = SubResource("StandardMaterial3D_anjkr")
+size = Vector3(4, 1, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gyqsl"]
+size = Vector3(3, 1, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ff50h"]
+albedo_color = Color(0.32941177, 1, 0.5647059, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_s3biy"]
+material = SubResource("StandardMaterial3D_ff50h")
+size = Vector3(3, 1, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_op2op"]
+albedo_color = Color(0.32941177, 1, 0.5647059, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_x4gfd"]
+material = SubResource("StandardMaterial3D_op2op")
+size = Vector3(3, 1, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_op2op"]
+size = Vector3(3, 1, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_l652x"]
+material = SubResource("StandardMaterial3D_op2op")
+size = Vector3(3, 1, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ity2g"]
+size = Vector3(2.5, 1, 2.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4c4i7"]
+material = SubResource("StandardMaterial3D_op2op")
+size = Vector3(2.5, 1, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ronwj"]
+size = Vector3(2.5, 1, 2.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ity2g"]
+material = SubResource("StandardMaterial3D_op2op")
+size = Vector3(2.5, 1, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fma50"]
+size = Vector3(2.5, 1, 2.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l652x"]
+albedo_color = Color(0.32941177, 1, 0.5647059, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fxmh0"]
+material = SubResource("StandardMaterial3D_l652x")
+size = Vector3(2.5, 1, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_l652x"]
+size = Vector3(2.5, 4.0493164, 2.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8gqon"]
+material = SubResource("StandardMaterial3D_l652x")
+size = Vector3(2.5, 4.049, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ff50h"]
+size = Vector3(8, 1, 8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s3biy"]
+albedo_color = Color(0.52156866, 0.36078432, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_o8emw"]
+material = SubResource("StandardMaterial3D_s3biy")
+size = Vector3(8, 1, 8)
+
 [node name="TestRoom" type="Node3D" unique_id=1070832589]
 
 [node name="Music" type="AudioStreamPlayer" parent="." unique_id=1911052534]
@@ -190,3 +265,86 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 6)
 
 [node name="DummyTarget" parent="." unique_id=811456662 instance=ExtResource("2_x68ck")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -4)
+
+[node name="WarmUp_Platform_01" type="StaticBody3D" parent="." unique_id=450711012]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, -32.154)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WarmUp_Platform_01" unique_id=816643340]
+shape = SubResource("BoxShape3D_asmw1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WarmUp_Platform_01" unique_id=934338870]
+mesh = SubResource("BoxMesh_sa601")
+
+[node name="WarmUp_Platform_02" type="StaticBody3D" parent="." unique_id=988943188]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 4.25, -38.653557)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WarmUp_Platform_02" unique_id=804435904]
+shape = SubResource("BoxShape3D_gyqsl")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WarmUp_Platform_02" unique_id=1389632406]
+mesh = SubResource("BoxMesh_s3biy")
+
+[node name="WarmUp_Platform_03" type="StaticBody3D" parent="." unique_id=1451229030]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 4.75, -46.513824)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WarmUp_Platform_03" unique_id=678366778]
+shape = SubResource("BoxShape3D_gyqsl")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WarmUp_Platform_03" unique_id=366985356]
+mesh = SubResource("BoxMesh_x4gfd")
+
+[node name="DJ_Platform_01" type="StaticBody3D" parent="." unique_id=899440641]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.864929, 5.75, -62.214527)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DJ_Platform_01" unique_id=185556241]
+shape = SubResource("BoxShape3D_op2op")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DJ_Platform_01" unique_id=568061311]
+mesh = SubResource("BoxMesh_l652x")
+
+[node name="DJ_Platform_02" type="StaticBody3D" parent="." unique_id=550735320]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.696392, 7, -61.17397)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DJ_Platform_02" unique_id=140965765]
+shape = SubResource("BoxShape3D_ity2g")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DJ_Platform_02" unique_id=524596361]
+mesh = SubResource("BoxMesh_4c4i7")
+
+[node name="DJ_Platform_03" type="StaticBody3D" parent="." unique_id=2128273523]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.051292, 8, -71.52833)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DJ_Platform_03" unique_id=339504536]
+shape = SubResource("BoxShape3D_ronwj")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DJ_Platform_03" unique_id=1170254379]
+mesh = SubResource("BoxMesh_ity2g")
+
+[node name="DJ_Platform_04" type="StaticBody3D" parent="." unique_id=803905143]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.342827, 10.55268, -71.52833)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DJ_Platform_04" unique_id=297047151]
+shape = SubResource("BoxShape3D_fma50")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DJ_Platform_04" unique_id=1149387846]
+mesh = SubResource("BoxMesh_fxmh0")
+
+[node name="DJ_Platform_05" type="StaticBody3D" parent="." unique_id=1377901962]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.342827, 13.548692, -67.827805)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DJ_Platform_05" unique_id=118381049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.5246582, 0)
+shape = SubResource("BoxShape3D_l652x")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DJ_Platform_05" unique_id=35934964]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.5268393, 0)
+mesh = SubResource("BoxMesh_8gqon")
+
+[node name="WarmUp_Hub_01" type="StaticBody3D" parent="." unique_id=482184920]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -62.05395)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WarmUp_Hub_01" unique_id=91247225]
+shape = SubResource("BoxShape3D_ff50h")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WarmUp_Hub_01" unique_id=527213784]
+mesh = SubResource("BoxMesh_o8emw")
