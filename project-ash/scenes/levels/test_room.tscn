@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://e0d8b6smprx5" path="res://scenes/player/ash.tscn" id="1_yv0av"]
 [ext_resource type="PackedScene" uid="uid://smimgte4vlkg" path="res://scenes/enemies/dummy_target.tscn" id="2_x68ck"]
 [ext_resource type="AudioStream" uid="uid://cgd8qkhx8s8ea" path="res://assets/music/Ratchet & Clank - Kerwan - Metropolis.mp3" id="3_bgm"]
+[ext_resource type="Script" uid="uid://yk1wcwyefmnr" path="res://scenes/levels/mover_01.gd" id="4_anjkr"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tn84w"]
 
@@ -14,10 +15,10 @@ background_mode = 2
 sky = SubResource("Sky_yv0av")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yv0av"]
-size = Vector3(20, 1, 20)
+size = Vector3(20, 1, 24)
 
 [sub_resource type="BoxMesh" id="BoxMesh_x68ck"]
-size = Vector3(20, 1, 20)
+size = Vector3(20, 1, 24)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gyqsl"]
 albedo_color = Color(0.52, 0.36, 1, 1)
@@ -125,6 +126,34 @@ albedo_color = Color(0.32941177, 1, 0.5647059, 1)
 material = SubResource("StandardMaterial3D_l652x")
 size = Vector3(2.5, 1, 2.5)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_4c4i7"]
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gqk78"]
+material = SubResource("StandardMaterial3D_l652x")
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fxmh0"]
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ul6hi"]
+material = SubResource("StandardMaterial3D_l652x")
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8gqon"]
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ipnnl"]
+material = SubResource("StandardMaterial3D_l652x")
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gqk78"]
+size = Vector3(2, 1, 9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xy0ef"]
+material = SubResource("StandardMaterial3D_l652x")
+size = Vector3(2, 1, 9)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_l652x"]
 size = Vector3(2.5, 4.0493164, 2.5)
 
@@ -158,6 +187,7 @@ environment = SubResource("Environment_x68ck")
 [node name="GymGeometry" type="Node3D" parent="." unique_id=822515419]
 
 [node name="Floor" type="StaticBody3D" parent="GymGeometry" unique_id=89441406]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="GymGeometry/Floor" unique_id=776599165]
 shape = SubResource("BoxShape3D_yv0av")
@@ -264,7 +294,7 @@ respawn_marker_path = NodePath("../PlayerSpawn")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 6)
 
 [node name="DummyTarget" parent="." unique_id=811456662 instance=ExtResource("2_x68ck")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 9.453003)
 
 [node name="WarmUp_Platform_01" type="StaticBody3D" parent="." unique_id=450711012]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, -32.154)
@@ -329,8 +359,55 @@ shape = SubResource("BoxShape3D_fma50")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="DJ_Platform_04" unique_id=1149387846]
 mesh = SubResource("BoxMesh_fxmh0")
 
+[node name="DJ_Platform_06" type="StaticBody3D" parent="." unique_id=452359215]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.342827, 13.40905, -51.999794)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DJ_Platform_06" unique_id=1747421048]
+shape = SubResource("BoxShape3D_4c4i7")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DJ_Platform_06" unique_id=1859265089]
+mesh = SubResource("BoxMesh_gqk78")
+
+[node name="Mover_01" type="AnimatableBody3D" parent="." unique_id=307807119]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.342827, 13.40905, -34.53042)
+script = ExtResource("4_anjkr")
+start_position = Vector3(-29.343, 13.409, -34.53)
+end_position = Vector3(-39.343, 13.409, -34.53)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Mover_01" unique_id=85637368]
+shape = SubResource("BoxShape3D_fxmh0")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Mover_01" unique_id=763538561]
+mesh = SubResource("BoxMesh_ul6hi")
+
+[node name="Mover_02" type="AnimatableBody3D" parent="." unique_id=295505148]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.342827, 13.40905, -27.384176)
+script = ExtResource("4_anjkr")
+start_position = Vector3(-34.343, 10.409, -27.384)
+end_position = Vector3(-34.343, 22.409, -27.384)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Mover_02" unique_id=1887679187]
+shape = SubResource("BoxShape3D_8gqon")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Mover_02" unique_id=931687035]
+mesh = SubResource("BoxMesh_ipnnl")
+
+[node name="Mover_03" type="AnimatableBody3D" parent="." unique_id=895889369]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.342827, 13.40905, -7.0889215)
+script = ExtResource("4_anjkr")
+start_position = Vector3(-34.343, 13.409, -7.089)
+end_position = Vector3(-34.343, 13.409, -7.089)
+speed = 10.0
+rotation_speed_degrees = Vector3(0, 180, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Mover_03" unique_id=536733324]
+shape = SubResource("BoxShape3D_gqk78")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Mover_03" unique_id=478161813]
+mesh = SubResource("BoxMesh_xy0ef")
+
 [node name="DJ_Platform_05" type="StaticBody3D" parent="." unique_id=1377901962]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.342827, 13.548692, -67.827805)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.342827, 13.381759, -68.23551)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DJ_Platform_05" unique_id=118381049]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.5246582, 0)

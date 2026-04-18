@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b7f0hw2kh4xtb"
-path="res://.godot/imported/Dash.fbx-f1872e29456dd5f68d4f0be82a1ff9bc.scn"
+uid="uid://dsfv4oobaybu2"
+path="res://.godot/imported/Jump_Start.fbx-11a0fcb5b454ed21ae2c1fabb5ac9806.scn"
 
 [deps]
 
-source_file="res://characters/jak/Dash.fbx"
-dest_files=["res://.godot/imported/Dash.fbx-f1872e29456dd5f68d4f0be82a1ff9bc.scn"]
+source_file="res://characters/jak/animations/fbx/Jump_Start.fbx"
+dest_files=["res://.godot/imported/Jump_Start.fbx-11a0fcb5b454ed21ae2c1fabb5ac9806.scn"]
 
 [params]
 

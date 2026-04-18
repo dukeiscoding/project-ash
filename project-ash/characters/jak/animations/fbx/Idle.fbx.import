@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://d1lfcnks1qped"
-path="res://.godot/imported/Running.fbx-0f74ca33f2dcee1b9ee85f02a2bff5b2.scn"
+uid="uid://c0hbwffuy00go"
+path="res://.godot/imported/Idle.fbx-64fc10c9e3cb681e4e9c2e2d435cc2b4.scn"
 
 [deps]
 
-source_file="res://characters/jak/Running.fbx"
-dest_files=["res://.godot/imported/Running.fbx-0f74ca33f2dcee1b9ee85f02a2bff5b2.scn"]
+source_file="res://characters/jak/animations/fbx/Idle.fbx"
+dest_files=["res://.godot/imported/Idle.fbx-64fc10c9e3cb681e4e9c2e2d435cc2b4.scn"]
 
 [params]
 

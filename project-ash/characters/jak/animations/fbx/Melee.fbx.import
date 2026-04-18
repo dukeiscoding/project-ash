@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dtkd2ysjtl6to"
-path="res://.godot/imported/Falling_Loop.fbx-2ea7bcd6d318d199dab806649feddb88.scn"
+uid="uid://bmxtsa8dpmlas"
+path="res://.godot/imported/Melee.fbx-3a7afcbab43a4b77a7b43c7eef1a8846.scn"
 
 [deps]
 
-source_file="res://characters/jak/Falling_Loop.fbx"
-dest_files=["res://.godot/imported/Falling_Loop.fbx-2ea7bcd6d318d199dab806649feddb88.scn"]
+source_file="res://characters/jak/animations/fbx/Melee.fbx"
+dest_files=["res://.godot/imported/Melee.fbx-3a7afcbab43a4b77a7b43c7eef1a8846.scn"]
 
 [params]
 

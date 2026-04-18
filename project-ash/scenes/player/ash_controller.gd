@@ -20,9 +20,11 @@ extends CharacterBody3D
 
 @export var coyote_time: float = 0.12
 @export var jump_buffer_time: float = 0.12
+@export var spin_jump_momentum_multiplier: float = 0.35
+@export var max_spin_jump_speed: float = 6.0
 
-@export var dash_speed: float = 22.0
-@export var dash_duration: float = 0.15
+@export var dash_speed: float = 16.0
+@export var dash_duration: float = 0.3
 @export var dash_cooldown: float = 0.35
 
 @export var fall_respawn_y: float = -10.0
@@ -30,17 +32,26 @@ extends CharacterBody3D
 
 @export var attack_duration: float = 0.12
 @export var attack_cooldown: float = 0.25
+@export var attack_anim_lock_duration: float = 0.38
+@export var attack_startup_move_multiplier: float = 0.6
+@export var attack_active_move_multiplier: float = 0.25
+@export var attack_recovery_move_multiplier: float = 0.45
+@export var attack_startup_duration: float = 0.1
+@export var attack_active_duration: float = 0.22
+@export var attack_lunge_speed: float = 8.0
+@export var attack_lunge_duration: float = 0.12
 @export var melee_weapon_path: NodePath = NodePath("VisualRoot/Jak(T-Pose)/Skeleton3D/weaponSocket_rightHand/PC _ Computer - Team Fortress 2 - Weapons_ Scout - Holy Mackerel")
 
 @export var max_air_jumps: int = 1
 
-@export var run_anim_speed_threshold: float = 0.15
+@export var run_anim_speed_threshold: float = 0.01
 @export var land_anim_duration: float = 0.12
 @export var jump_start_min_duration: float = 1.0
 @export var jump_start_playback_speed: float = 1.0
 @export var double_jump_anim_duration: float = 0.35
 @export var double_jump_playback_speed: float = 1.0
 @export var double_jump_min_duration: float = 0.45
+@export var looping_animation_names: Array[String] = ["Idle", "Run", "FallLoop"]
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var camera_yaw: Node3D = $CameraYaw
@@ -68,6 +79,7 @@ var dash_direction := Vector3.ZERO
 var is_attacking := false
 var attack_timer := 0.0
 var attack_cooldown_timer := 0.0
+var attack_lunge_direction := Vector3.ZERO
 var hit_targets_this_swing: Array[Node] = []
 
 var current_anim: String = ""
@@ -77,6 +89,8 @@ var jump_start_timer: float = 0.0
 var double_jump_timer: float = 0.0
 var double_jump_elapsed: float = 0.0
 var animation_playback: AnimationNodeStateMachinePlayback
+var floor_platform: Node3D
+var floor_platform_angular_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -89,6 +103,7 @@ func _ready() -> void:
 	air_jumps_remaining = max_air_jumps
 	was_on_floor_last_frame = is_on_floor()
 	_disable_unused_animation_players()
+	_configure_animation_loop_modes()
 	animation_tree.active = true
 	animation_playback = animation_tree.get("parameters/playback") as AnimationNodeStateMachinePlayback
 
@@ -124,6 +139,7 @@ func _physics_process(delta: float) -> void:
 	_update_attack_pivot()
 	_handle_visual_rotation(delta)
 	move_and_slide()
+	_update_floor_platform_contact()
 	_update_camera_fov(delta)
 	_check_fall_respawn()
 	_update_character_animation(delta)
@@ -148,6 +164,8 @@ func _handle_jump_input() -> void:
 		jump_buffer_timer = jump_buffer_time
 
 	if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
+		if is_on_floor():
+			_apply_spin_jump_momentum()
 		velocity.y = jump_velocity
 		jump_start_timer = jump_start_min_duration
 		jump_buffer_timer = 0.0
@@ -183,12 +201,75 @@ func _handle_horizontal_movement(delta: float) -> void:
 	if input_dir != Vector2.ZERO:
 		move_dir = _get_camera_relative_direction(input_dir)
 
-	var target_velocity_x := move_dir.x * move_speed * input_strength
-	var target_velocity_z := move_dir.z * move_speed * input_strength
+	var attack_move_multiplier := _get_attack_move_multiplier()
+	var target_velocity_x := move_dir.x * move_speed * input_strength * attack_move_multiplier
+	var target_velocity_z := move_dir.z * move_speed * input_strength * attack_move_multiplier
+
+	if is_attacking and _get_attack_elapsed() <= attack_lunge_duration:
+		target_velocity_x += attack_lunge_direction.x * attack_lunge_speed
+		target_velocity_z += attack_lunge_direction.z * attack_lunge_speed
+
 	var current_accel := acceleration if is_on_floor() else air_acceleration
 
 	velocity.x = move_toward(velocity.x, target_velocity_x, current_accel * delta * move_speed)
 	velocity.z = move_toward(velocity.z, target_velocity_z, current_accel * delta * move_speed)
+
+func _apply_spin_jump_momentum() -> void:
+	if spin_jump_momentum_multiplier <= 0.0:
+		return
+
+	if floor_platform == null or not is_instance_valid(floor_platform):
+		return
+
+	var angular_velocity := floor_platform_angular_velocity
+	if angular_velocity.length_squared() <= 0.000001:
+		return
+
+	var tangent_velocity := angular_velocity.cross(global_position - floor_platform.global_position)
+	tangent_velocity.y = 0.0
+
+	var launch_velocity := tangent_velocity * spin_jump_momentum_multiplier
+	if launch_velocity.length() > max_spin_jump_speed:
+		launch_velocity = launch_velocity.normalized() * max_spin_jump_speed
+
+	velocity.x += launch_velocity.x
+	velocity.z += launch_velocity.z
+
+func _update_floor_platform_contact() -> void:
+	floor_platform = null
+	floor_platform_angular_velocity = Vector3.ZERO
+
+	if not is_on_floor():
+		return
+
+	var platform := _get_floor_collider()
+	if platform == null:
+		return
+
+	floor_platform = platform
+	floor_platform_angular_velocity = get_platform_angular_velocity()
+
+	if floor_platform_angular_velocity.length_squared() <= 0.000001 and platform.has_method("get_platform_angular_velocity"):
+		var reported_angular_velocity = platform.call("get_platform_angular_velocity")
+		if reported_angular_velocity is Vector3:
+			floor_platform_angular_velocity = reported_angular_velocity
+
+func _get_floor_collider() -> Node3D:
+	var floor_dot_threshold := cos(floor_max_angle)
+
+	for index in get_slide_collision_count():
+		var collision := get_slide_collision(index)
+		if collision == null:
+			continue
+
+		if collision.get_normal().dot(up_direction) < floor_dot_threshold:
+			continue
+
+		var collider := collision.get_collider()
+		if collider is Node3D:
+			return collider
+
+	return null
 
 func _try_start_dash() -> void:
 	if not Input.is_action_just_pressed("dash"):
@@ -232,6 +313,7 @@ func _try_start_attack() -> void:
 	is_attacking = true
 	attack_timer = attack_duration
 	attack_cooldown_timer = attack_cooldown
+	attack_lunge_direction = _get_attack_direction()
 	hit_targets_this_swing.clear()
 	attack_hitbox.monitoring = true
 	attack_debug_mesh.visible = false
@@ -247,10 +329,42 @@ func _update_attack_state(delta: float) -> void:
 
 	if attack_timer <= 0.0:
 		is_attacking = false
+		attack_lunge_direction = Vector3.ZERO
 		attack_hitbox.monitoring = false
 		attack_debug_mesh.visible = false
 		_set_melee_weapon_visible(false)
 		hit_targets_this_swing.clear()
+
+func _get_attack_move_multiplier() -> float:
+	if not is_attacking:
+		return 1.0
+
+	var elapsed := _get_attack_elapsed()
+	if elapsed < attack_startup_duration:
+		return attack_startup_move_multiplier
+
+	if elapsed < attack_startup_duration + attack_active_duration:
+		return attack_active_move_multiplier
+
+	return attack_recovery_move_multiplier
+
+func _get_attack_elapsed() -> float:
+	return max(attack_duration - attack_timer, 0.0)
+
+func _get_attack_direction() -> Vector3:
+	var input_dir := _get_move_input()
+	if input_dir != Vector2.ZERO:
+		return _get_camera_relative_direction(input_dir)
+
+	var forward := visual_root.global_transform.basis.z
+	forward.y = 0.0
+	if forward.length() <= 0.001:
+		return _get_camera_forward()
+
+	return forward.normalized()
+
+func _should_force_melee_animation() -> bool:
+	return is_attacking and _get_attack_elapsed() < attack_anim_lock_duration
 
 func _update_attack_pivot() -> void:
 	var horizontal_velocity := Vector3(velocity.x, 0.0, velocity.z)
@@ -361,7 +475,7 @@ func _update_character_animation(delta: float) -> void:
 	# Example later:
 	# hurt > death > melee_combo > dash > double_jump > jump_start > fall > land > run > idle
 
-	if is_attacking:
+	if _should_force_melee_animation():
 		_play_character_animation("Melee")
 	elif is_dashing:
 		_play_character_animation("Dash")
@@ -403,6 +517,28 @@ func _play_character_animation(anim_name: String) -> void:
 
 	print("Playing animation:", anim_name)
 	current_anim = anim_name
+
+func _configure_animation_loop_modes() -> void:
+	if animation_player == null:
+		return
+
+	for animation_name in animation_player.get_animation_list():
+		var animation := animation_player.get_animation(animation_name)
+		if animation == null:
+			continue
+
+		var short_name := _get_animation_short_name(String(animation_name))
+		if looping_animation_names.has(short_name):
+			animation.loop_mode = Animation.LOOP_LINEAR
+		else:
+			animation.loop_mode = Animation.LOOP_NONE
+
+func _get_animation_short_name(animation_name: String) -> String:
+	var slash_index := animation_name.rfind("/")
+	if slash_index == -1:
+		return animation_name
+
+	return animation_name.substr(slash_index + 1)
 
 func _set_melee_weapon_visible(is_visible: bool) -> void:
 	if melee_weapon != null:

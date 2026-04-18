@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://btu4k0mmstpw1"
-path="res://.godot/imported/DoubleJump.fbx-279f6e4593dc936e6efdbbaab4e34667.scn"
+uid="uid://biraf37djw2or"
+path="res://.godot/imported/Land.fbx-ccd6f9b94170f587e3c519c3b025bc4f.scn"
 
 [deps]
 
-source_file="res://characters/jak/DoubleJump.fbx"
-dest_files=["res://.godot/imported/DoubleJump.fbx-279f6e4593dc936e6efdbbaab4e34667.scn"]
+source_file="res://characters/jak/animations/fbx/Land.fbx"
+dest_files=["res://.godot/imported/Land.fbx-ccd6f9b94170f587e3c519c3b025bc4f.scn"]
 
 [params]
 

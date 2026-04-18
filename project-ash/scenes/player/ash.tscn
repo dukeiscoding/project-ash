@@ -1095,7 +1095,6 @@ _data = {
 [sub_resource type="Animation" id="Animation_8vmm2"]
 resource_name = "Melee"
 length = 0.53333336
-loop_mode = 1
 tracks/0/type = "position_3d"
 tracks/0/imported = true
 tracks/0/enabled = true
@@ -1760,7 +1759,7 @@ animation = &"Melee"
 animation = &"Run"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_default"]
-xfade_time = 0.1
+xfade_time = 0.08
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_xdlwq"]
 xfade_time = 0.05
@@ -1769,10 +1768,16 @@ xfade_time = 0.05
 xfade_time = 0.04
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_d7ek4"]
-xfade_time = 0.04
+xfade_time = 0.18
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_bvn6d"]
 xfade_time = 0.04
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_v4128"]
+xfade_time = 0.02
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_rdoi3"]
+xfade_time = 0.02
 
 [sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_ash"]
 states/Dash/node = SubResource("AnimationNodeAnimation_dash")
@@ -1785,7 +1790,7 @@ states/FallLoop/position = Vector2(712.8, -189.92)
 states/Idle/node = SubResource("AnimationNodeAnimation_idle")
 states/Idle/position = Vector2(-46.080006, 18.821884)
 states/JumpStart/node = SubResource("AnimationNodeAnimation_jump_start")
-states/JumpStart/position = Vector2(293.312, 19.898638)
+states/JumpStart/position = Vector2(293.312, 18.78542)
 states/Land/node = SubResource("AnimationNodeAnimation_land")
 states/Land/position = Vector2(712.448, 183.776)
 states/Melee/node = SubResource("AnimationNodeAnimation_melee")
@@ -1793,8 +1798,8 @@ states/Melee/position = Vector2(500.64, 184)
 states/Run/node = SubResource("AnimationNodeAnimation_run")
 states/Run/position = Vector2(126.40001, 183.36)
 states/Start/position = Vector2(-156.79999, -182.08)
-transitions = ["Idle", "Run", SubResource("AnimationNodeStateMachineTransition_default"), "Run", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "Idle", "JumpStart", SubResource("AnimationNodeStateMachineTransition_default"), "JumpStart", "FallLoop", SubResource("AnimationNodeStateMachineTransition_default"), "FallLoop", "Land", SubResource("AnimationNodeStateMachineTransition_default"), "Land", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "Run", "JumpStart", SubResource("AnimationNodeStateMachineTransition_default"), "Run", "Dash", SubResource("AnimationNodeStateMachineTransition_default"), "Idle", "Dash", SubResource("AnimationNodeStateMachineTransition_default"), "Dash", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "Idle", "Melee", SubResource("AnimationNodeStateMachineTransition_default"), "Run", "Melee", SubResource("AnimationNodeStateMachineTransition_default"), "Melee", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "JumpStart", "Land", SubResource("AnimationNodeStateMachineTransition_default"), "FallLoop", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "JumpStart", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "Dash", "Run", SubResource("AnimationNodeStateMachineTransition_default"), "Melee", "Run", SubResource("AnimationNodeStateMachineTransition_default"), "FallLoop", "JumpStart", SubResource("AnimationNodeStateMachineTransition_default"), "DoubleJump", "FallLoop", SubResource("AnimationNodeStateMachineTransition_xdlwq"), "FallLoop", "DoubleJump", SubResource("AnimationNodeStateMachineTransition_v0p8n"), "Dash", "FallLoop", SubResource("AnimationNodeStateMachineTransition_d7ek4"), "Dash", "Land", SubResource("AnimationNodeStateMachineTransition_bvn6d")]
-graph_offset = Vector2(-261.25357, -63.184082)
+transitions = ["Idle", "Run", SubResource("AnimationNodeStateMachineTransition_default"), "Run", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "Idle", "JumpStart", SubResource("AnimationNodeStateMachineTransition_default"), "JumpStart", "FallLoop", SubResource("AnimationNodeStateMachineTransition_default"), "FallLoop", "Land", SubResource("AnimationNodeStateMachineTransition_default"), "Land", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "Run", "JumpStart", SubResource("AnimationNodeStateMachineTransition_default"), "Run", "Dash", SubResource("AnimationNodeStateMachineTransition_default"), "Idle", "Dash", SubResource("AnimationNodeStateMachineTransition_default"), "Dash", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "Idle", "Melee", SubResource("AnimationNodeStateMachineTransition_default"), "Run", "Melee", SubResource("AnimationNodeStateMachineTransition_default"), "Melee", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "JumpStart", "Land", SubResource("AnimationNodeStateMachineTransition_default"), "FallLoop", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "JumpStart", "Idle", SubResource("AnimationNodeStateMachineTransition_default"), "Dash", "Run", SubResource("AnimationNodeStateMachineTransition_default"), "Melee", "Run", SubResource("AnimationNodeStateMachineTransition_default"), "FallLoop", "JumpStart", SubResource("AnimationNodeStateMachineTransition_default"), "DoubleJump", "FallLoop", SubResource("AnimationNodeStateMachineTransition_xdlwq"), "FallLoop", "DoubleJump", SubResource("AnimationNodeStateMachineTransition_v0p8n"), "Dash", "FallLoop", SubResource("AnimationNodeStateMachineTransition_d7ek4"), "Dash", "Land", SubResource("AnimationNodeStateMachineTransition_bvn6d"), "Dash", "DoubleJump", SubResource("AnimationNodeStateMachineTransition_v4128"), "JumpStart", "DoubleJump", SubResource("AnimationNodeStateMachineTransition_rdoi3")]
+graph_offset = Vector2(-212.25357, -94.18408)
 
 [sub_resource type="Animation" id="Animation_aoyms"]
 resource_name = "DoubleJump"
@@ -2043,31 +2048,47 @@ transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, 0, -1, 0)
 bones/0/position = Vector3(0.0013809967, 0.2811135, -0.0041509904)
 bones/0/rotation = Quaternion(0, 0, 0, 1)
 bones/1/rotation = Quaternion(-0.038430378, 0, 0, 0.99926126)
+bones/2/position = Vector3(-2.1684043e-19, 0.037333407, 1.14467914e-10)
 bones/2/rotation = Quaternion(6.0032233e-09, 0, 0, 1)
+bones/3/position = Vector3(0, 0.04266677, -1.5052777e-10)
 bones/3/rotation = Quaternion(0, 0, 0, 1)
 bones/4/rotation = Quaternion(0.03843037, 0, 0, 0.99926126)
 bones/5/rotation = Quaternion(0, 0, 0, 1)
 bones/7/rotation = Quaternion(-0.55376023, -0.4354725, 0.56494814, -0.42958936)
+bones/8/position = Vector3(-3.661344e-11, 0.056709297, -4.3322262e-10)
 bones/8/rotation = Quaternion(-0.10023857, 0.0009070242, -0.00900271, 0.99492234)
+bones/9/position = Vector3(-8.809127e-12, 0.06435799, 3.336853e-11)
 bones/9/rotation = Quaternion(-0.0070641143, -1.6768976e-05, 0.0023738716, 0.9999722)
+bones/10/position = Vector3(8.5361745e-11, 0.12301067, -7.791778e-11)
 bones/10/rotation = Quaternion(0.03991899, 0.005480338, 0.13590036, 0.9899028)
+bones/11/position = Vector3(3.3750926e-11, 0.035304606, 1.10046416e-10)
 bones/11/rotation = Quaternion(0.22208376, 0.6879149, -0.2351312, 0.6497424)
+bones/12/position = Vector3(-1.6230406e-11, 0.016462326, 1.6958847e-10)
 bones/12/rotation = Quaternion(-2.0816682e-16, 2.1141942e-18, -4.1741784e-18, 1)
 bones/13/rotation = Quaternion(2.0816682e-16, 4.6078592e-18, -6.505213e-19, 1)
 bones/15/rotation = Quaternion(0.55169, -0.43687484, 0.56675893, 0.42844242)
+bones/16/position = Vector3(3.9137676e-11, 0.056709297, -4.330089e-10)
 bones/16/rotation = Quaternion(-0.09928376, 0.00032888696, -0.0032961885, 0.99505365)
+bones/17/position = Vector3(4.5220237e-11, 0.06433277, -7.628237e-11)
 bones/17/rotation = Quaternion(-0.00797379, -6.93862e-05, 0.008700677, 0.9999304)
+bones/18/position = Vector3(3.2699646e-10, 0.12302715, 4.4743376e-11)
 bones/18/rotation = Quaternion(0.03655524, -0.0026537573, -0.07235655, 0.9967052)
+bones/19/position = Vector3(-8.760488e-11, 0.03370993, -1.7640817e-10)
 bones/19/rotation = Quaternion(0.057777304, 0.00064489257, 0.011142318, 0.9982671)
 bones/20/rotation = Quaternion(-7.589415e-18, 1.7347235e-18, 0, 1)
 bones/21/rotation = Quaternion(1.110223e-16, 3.469447e-18, 0, 1)
 bones/23/rotation = Quaternion(-0.00021564857, -0.01088109, 0.9997444, -0.019813588)
+bones/24/position = Vector3(-1.4786644e-10, 0.10469991, 4.688213e-11)
 bones/24/rotation = Quaternion(-0.052278735, 9.725205e-05, -0.0018577136, 0.9986308)
+bones/25/position = Vector3(2.1902903e-11, 0.094702184, 3.1975664e-10)
 bones/25/rotation = Quaternion(0.5216408, 0.016294623, -0.0099653285, 0.8529514)
 bones/26/rotation = Quaternion(0.30653355, 0.01594913, -0.0051369974, 0.95171237)
 bones/28/rotation = Quaternion(0.00014803451, -0.007468517, 0.99977577, 0.019816685)
+bones/29/position = Vector3(-9.270482e-11, 0.104686804, -5.907774e-14)
 bones/29/rotation = Quaternion(-0.055288516, -0.00010224217, 0.001846417, 0.9984687)
+bones/30/position = Vector3(-1.430307e-10, 0.09469262, -3.6399786e-10)
 bones/30/rotation = Quaternion(0.5206862, -0.016465114, 0.010044351, 0.8535303)
+bones/31/position = Vector3(-8.9236334e-11, 0.10503922, -4.616043e-10)
 bones/31/rotation = Quaternion(0.30723187, -0.015873449, 0.005125474, 0.9514885)
 
 [node name="weaponSocket_rightHand" type="BoneAttachment3D" parent="VisualRoot/Jak(T-Pose)/Skeleton3D" index="26" unique_id=1172473696]
