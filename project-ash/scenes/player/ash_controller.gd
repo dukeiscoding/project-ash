@@ -30,16 +30,30 @@ extends CharacterBody3D
 @export var fall_respawn_y: float = -10.0
 @export var respawn_marker_path: NodePath
 
-@export var attack_duration: float = 0.12
+@export var attack_duration: float = 0.16
 @export var attack_cooldown: float = 0.25
 @export var attack_anim_lock_duration: float = 0.38
+@export var melee2_anim_lock_duration: float = 0.6
+@export var melee3_anim_lock_duration: float = 0.65
+@export var attack_combo_cancel_time: float = 0.22
+@export var melee2_combo_cancel_time: float = 0.35
+@export var combo_input_grace_time: float = 0.25
 @export var attack_startup_move_multiplier: float = 0.6
 @export var attack_active_move_multiplier: float = 0.25
 @export var attack_recovery_move_multiplier: float = 0.45
 @export var attack_startup_duration: float = 0.1
 @export var attack_active_duration: float = 0.22
 @export var attack_lunge_speed: float = 8.0
-@export var attack_lunge_duration: float = 0.12
+@export var melee2_lunge_speed: float = 10.0
+@export var melee3_lunge_speed: float = 13.0
+@export var attack_lunge_duration: float = 0.13
+@export var melee2_lunge_duration: float = 0.14
+@export var melee3_lunge_duration: float = 0.16
+@export var max_melee_combo_steps: int = 3
+@export var melee3_animation_name: String = "Melee3"
+@export var melee_playback_speed: float = 1.0
+@export var melee2_playback_speed: float = 1.0
+@export var melee3_playback_speed: float = 1.0
 @export var melee_weapon_path: NodePath = NodePath("VisualRoot/Jak(T-Pose)/Skeleton3D/weaponSocket_rightHand/PC _ Computer - Team Fortress 2 - Weapons_ Scout - Holy Mackerel")
 
 @export var max_air_jumps: int = 1
@@ -78,11 +92,16 @@ var dash_direction := Vector3.ZERO
 
 var is_attacking := false
 var attack_timer := 0.0
+var attack_lock_timer := 0.0
 var attack_cooldown_timer := 0.0
+var combo_grace_timer := 0.0
 var attack_lunge_direction := Vector3.ZERO
+var attack_combo_step := 0
+var is_next_attack_queued := false
 var hit_targets_this_swing: Array[Node] = []
 
 var current_anim: String = ""
+var current_anim_combo_step := 0
 var was_on_floor_last_frame: bool = false
 var land_timer: float = 0.0
 var jump_start_timer: float = 0.0
@@ -111,6 +130,7 @@ func _ready() -> void:
 		animation_player.speed_scale = 1.0
 		animation_playback.start("Idle")
 		current_anim = "Idle"
+		current_anim_combo_step = 0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -154,6 +174,9 @@ func _update_timers(delta: float) -> void:
 	jump_buffer_timer = max(jump_buffer_timer - delta, 0.0)
 	dash_cooldown_timer = max(dash_cooldown_timer - delta, 0.0)
 	attack_cooldown_timer = max(attack_cooldown_timer - delta, 0.0)
+	combo_grace_timer = max(combo_grace_timer - delta, 0.0)
+	if combo_grace_timer <= 0.0 and not is_attacking:
+		attack_combo_step = 0
 	jump_start_timer = max(jump_start_timer - delta, 0.0)
 	if double_jump_timer > 0.0:
 		double_jump_timer = max(double_jump_timer - delta, 0.0)
@@ -205,9 +228,10 @@ func _handle_horizontal_movement(delta: float) -> void:
 	var target_velocity_x := move_dir.x * move_speed * input_strength * attack_move_multiplier
 	var target_velocity_z := move_dir.z * move_speed * input_strength * attack_move_multiplier
 
-	if is_attacking and _get_attack_elapsed() <= attack_lunge_duration:
-		target_velocity_x += attack_lunge_direction.x * attack_lunge_speed
-		target_velocity_z += attack_lunge_direction.z * attack_lunge_speed
+	if is_attacking and attack_timer > 0.0 and _get_attack_elapsed() <= _get_attack_lunge_duration(attack_combo_step):
+		var attack_lunge_speed_to_apply := _get_attack_lunge_speed(attack_combo_step)
+		target_velocity_x += attack_lunge_direction.x * attack_lunge_speed_to_apply
+		target_velocity_z += attack_lunge_direction.z * attack_lunge_speed_to_apply
 
 	var current_accel := acceleration if is_on_floor() else air_acceleration
 
@@ -305,13 +329,26 @@ func _try_start_attack() -> void:
 		return
 
 	if is_attacking:
+		if attack_combo_step < max_melee_combo_steps:
+			is_next_attack_queued = true
+		return
+
+	if combo_grace_timer > 0.0 and attack_combo_step > 0 and attack_combo_step < max_melee_combo_steps:
+		_start_attack(attack_combo_step + 1)
 		return
 
 	if attack_cooldown_timer > 0.0:
 		return
 
+	_start_attack(1)
+
+func _start_attack(combo_step: int) -> void:
 	is_attacking = true
+	attack_combo_step = combo_step
+	is_next_attack_queued = false
+	combo_grace_timer = 0.0
 	attack_timer = attack_duration
+	attack_lock_timer = max(_get_attack_anim_lock_duration(combo_step), attack_duration)
 	attack_cooldown_timer = attack_cooldown
 	attack_lunge_direction = _get_attack_direction()
 	hit_targets_this_swing.clear()
@@ -325,18 +362,39 @@ func _update_attack_state(delta: float) -> void:
 	if not is_attacking:
 		return
 
-	attack_timer -= delta
+	attack_lock_timer = max(attack_lock_timer - delta, 0.0)
 
-	if attack_timer <= 0.0:
-		is_attacking = false
-		attack_lunge_direction = Vector3.ZERO
-		attack_hitbox.monitoring = false
-		attack_debug_mesh.visible = false
-		_set_melee_weapon_visible(false)
-		hit_targets_this_swing.clear()
+	if attack_timer > 0.0:
+		attack_timer = max(attack_timer - delta, 0.0)
+		if attack_timer <= 0.0:
+			attack_hitbox.monitoring = false
+			attack_debug_mesh.visible = false
+
+	if is_next_attack_queued and attack_combo_step < max_melee_combo_steps and _can_advance_attack_combo():
+		_start_attack(attack_combo_step + 1)
+		return
+
+	if attack_lock_timer <= 0.0:
+		_end_attack(true)
+
+func _end_attack(keep_combo_grace: bool = false) -> void:
+	is_attacking = false
+	is_next_attack_queued = false
+	attack_lock_timer = 0.0
+	attack_lunge_direction = Vector3.ZERO
+	attack_hitbox.monitoring = false
+	attack_debug_mesh.visible = false
+	_set_melee_weapon_visible(false)
+	hit_targets_this_swing.clear()
+
+	if keep_combo_grace and attack_combo_step < max_melee_combo_steps:
+		combo_grace_timer = combo_input_grace_time
+	else:
+		attack_combo_step = 0
+		combo_grace_timer = 0.0
 
 func _get_attack_move_multiplier() -> float:
-	if not is_attacking:
+	if not is_attacking or attack_timer <= 0.0:
 		return 1.0
 
 	var elapsed := _get_attack_elapsed()
@@ -351,6 +409,12 @@ func _get_attack_move_multiplier() -> float:
 func _get_attack_elapsed() -> float:
 	return max(attack_duration - attack_timer, 0.0)
 
+func _get_attack_lock_elapsed() -> float:
+	return max(_get_attack_anim_lock_duration(attack_combo_step) - attack_lock_timer, 0.0)
+
+func _can_advance_attack_combo() -> bool:
+	return _get_attack_lock_elapsed() >= _get_attack_combo_cancel_time(attack_combo_step)
+
 func _get_attack_direction() -> Vector3:
 	var input_dir := _get_move_input()
 	if input_dir != Vector2.ZERO:
@@ -364,7 +428,32 @@ func _get_attack_direction() -> Vector3:
 	return forward.normalized()
 
 func _should_force_melee_animation() -> bool:
-	return is_attacking and _get_attack_elapsed() < attack_anim_lock_duration
+	return is_attacking and attack_lock_timer > 0.0
+
+func _get_melee_animation_name() -> String:
+	if attack_combo_step == 3:
+		return melee3_animation_name
+	return "Melee2" if attack_combo_step == 2 else "Melee"
+
+func _get_attack_anim_lock_duration(combo_step: int) -> float:
+	if combo_step == 3:
+		return melee3_anim_lock_duration
+	return melee2_anim_lock_duration if combo_step == 2 else attack_anim_lock_duration
+
+func _get_attack_combo_cancel_time(combo_step: int) -> float:
+	if combo_step == 2:
+		return melee2_combo_cancel_time
+	return attack_combo_cancel_time
+
+func _get_attack_lunge_speed(combo_step: int) -> float:
+	if combo_step == 3:
+		return melee3_lunge_speed
+	return melee2_lunge_speed if combo_step == 2 else attack_lunge_speed
+
+func _get_attack_lunge_duration(combo_step: int) -> float:
+	if combo_step == 3:
+		return melee3_lunge_duration
+	return melee2_lunge_duration if combo_step == 2 else attack_lunge_duration
 
 func _update_attack_pivot() -> void:
 	var horizontal_velocity := Vector3(velocity.x, 0.0, velocity.z)
@@ -443,8 +532,12 @@ func _respawn_player() -> void:
 	dash_timer = 0.0
 	dash_cooldown_timer = 0.0
 	is_attacking = false
+	attack_combo_step = 0
+	is_next_attack_queued = false
 	attack_timer = 0.0
+	attack_lock_timer = 0.0
 	attack_cooldown_timer = 0.0
+	combo_grace_timer = 0.0
 	attack_hitbox.monitoring = false
 	attack_debug_mesh.visible = false
 	_set_melee_weapon_visible(false)
@@ -458,6 +551,7 @@ func _respawn_player() -> void:
 		animation_player.speed_scale = 1.0
 		animation_playback.start("Idle")
 		current_anim = "Idle"
+		current_anim_combo_step = 0
 
 func _update_character_animation(delta: float) -> void:
 	var on_floor_now := is_on_floor()
@@ -476,7 +570,7 @@ func _update_character_animation(delta: float) -> void:
 	# hurt > death > melee_combo > dash > double_jump > jump_start > fall > land > run > idle
 
 	if _should_force_melee_animation():
-		_play_character_animation("Melee")
+		_play_character_animation(_get_melee_animation_name())
 	elif is_dashing:
 		_play_character_animation("Dash")
 	elif not on_floor_now and _should_play_double_jump():
@@ -501,7 +595,11 @@ func _should_play_double_jump() -> bool:
 	return double_jump_elapsed < double_jump_min_duration or velocity.y > 0.0
 
 func _play_character_animation(anim_name: String) -> void:
-	if current_anim == anim_name:
+	var anim_combo_step := 0
+	if is_attacking and (anim_name == "Melee" or anim_name == "Melee2" or anim_name == melee3_animation_name):
+		anim_combo_step = attack_combo_step
+
+	if current_anim == anim_name and current_anim_combo_step == anim_combo_step:
 		return
 
 	if animation_playback == null:
@@ -511,12 +609,22 @@ func _play_character_animation(anim_name: String) -> void:
 		animation_player.speed_scale = jump_start_playback_speed
 	elif anim_name == "DoubleJump":
 		animation_player.speed_scale = double_jump_playback_speed
+	elif attack_combo_step == 3 and anim_name == melee3_animation_name:
+		animation_player.speed_scale = melee3_playback_speed
+	elif attack_combo_step == 2 and anim_name == "Melee2":
+		animation_player.speed_scale = melee2_playback_speed
+	elif attack_combo_step == 1 and anim_name == "Melee":
+		animation_player.speed_scale = melee_playback_speed
 	else:
 		animation_player.speed_scale = 1.0
-	animation_playback.travel(anim_name)
+	if current_anim == anim_name:
+		animation_playback.start(anim_name)
+	else:
+		animation_playback.travel(anim_name)
 
 	print("Playing animation:", anim_name)
 	current_anim = anim_name
+	current_anim_combo_step = anim_combo_step
 
 func _configure_animation_loop_modes() -> void:
 	if animation_player == null:
@@ -540,9 +648,9 @@ func _get_animation_short_name(animation_name: String) -> String:
 
 	return animation_name.substr(slash_index + 1)
 
-func _set_melee_weapon_visible(is_visible: bool) -> void:
+func _set_melee_weapon_visible(weapon_visible: bool) -> void:
 	if melee_weapon != null:
-		melee_weapon.visible = is_visible
+		melee_weapon.visible = weapon_visible
 
 func _disable_unused_animation_players() -> void:
 	for child in jak_root.get_children():
